@@ -14,6 +14,12 @@ public class InspectCommand {
 
             int command = -1;
             ConfigHandler.inspecting.putIfAbsent(player.getName(), false);
+            
+            // Check if player has only the restricted permission
+            boolean hasFullInspect = player.hasPermission("coreprotect.inspect");
+            boolean hasBlocksInspect = player.hasPermission("coreprotect.inspect.blocks");
+            // Store whether this is restricted mode in the player's session
+            ConfigHandler.inspectBlocksOnly.put(player.getName(), !hasFullInspect && hasBlocksInspect);
 
             if (args.length > 1) {
                 String action = args[1];
