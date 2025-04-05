@@ -33,7 +33,7 @@ public final class BlockDispenseListener extends Queue implements Listener {
     protected void onBlockDispense(BlockDispenseEvent event) {
         Block block = event.getBlock();
         World world = block.getWorld();
-        if (!event.isCancelled() && Config.getConfig(world).BLOCK_PLACE) {
+        if (!event.isCancelled() && Config.getConfig(world).BLOCK_PLACE && Config.getConfig(world).BLOCK_DISPENSE) {
             BlockData blockData = block.getBlockData();
             ItemStack item = event.getItem();
             if (item != null && blockData instanceof Dispenser) {

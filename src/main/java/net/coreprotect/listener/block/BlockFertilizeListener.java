@@ -27,7 +27,7 @@ public final class BlockFertilizeListener extends Queue implements Listener {
         }
 
         Block block = event.getBlock();
-        if (!Config.getConfig(block.getWorld()).BLOCK_PLACE) {
+        if (!Config.getConfig(block.getWorld()).BLOCK_PLACE || !Config.getConfig(block.getWorld()).BLOCK_FERTILIZE) {
             return;
         }
 
