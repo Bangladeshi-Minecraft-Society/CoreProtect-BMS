@@ -93,6 +93,7 @@ public class ConfigHandler extends Queue {
     public static Map<Integer, String> artReversed = syncMap();
     public static Map<String, int[]> rollbackHash = syncMap();
     public static Map<String, Boolean> inspecting = syncMap();
+    public static Map<String, Boolean> inspectBlocksOnly = syncMap();
     public static Map<String, Boolean> blacklist = syncMap();
     public static Map<String, Integer> loggingChest = syncMap();
     public static Map<String, Integer> loggingItem = syncMap();

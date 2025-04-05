@@ -36,6 +36,10 @@ ___
 
 ### /co inspect
 Enable the inspector. Type the command again to disable it. You can also use just "/co i".
+
+When using the inspector, left-click a block to see its history, or right-click a container to view transaction logs.
+
+**Restricted Mode:** Players with only the `coreprotect.inspect.blocks` permission (without `coreprotect.inspect`) can use the inspector, but will only see block placement and break events. Container interactions, item transactions, sign text, and other potentially sensitive logs will be hidden from these users.
 ___
 
 ### /co lookup

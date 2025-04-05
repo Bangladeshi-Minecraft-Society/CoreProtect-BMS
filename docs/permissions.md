@@ -12,6 +12,9 @@ The following permissions can be used to restrict functionality within the plugi
 * **coreprotect.inspect** *(default: op)*  
   Allows access to the CoreProtect inspect command.  
   &nbsp;
+* **coreprotect.inspect.blocks** *(default: op)*  
+  Allows restricted access to the CoreProtect inspect command, showing only block placement and breaking events.  
+  &nbsp;
 * **coreprotect.lookup** *(default: op)*  
   Allows access to the CoreProtect lookup command.  
   &nbsp;

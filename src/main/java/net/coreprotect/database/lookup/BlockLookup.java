@@ -7,6 +7,7 @@ import java.util.Locale;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import net.coreprotect.config.ConfigHandler;
 import net.coreprotect.database.statement.UserStatement;
@@ -46,6 +47,16 @@ public class BlockLookup {
                 }
             }
 
+            // Check if this is a restricted inspection (blocks only)
+            boolean blocksOnlyMode = false;
+            if (commandSender instanceof Player) {
+                Player player = (Player) commandSender;
+                // Check if the player has the restricted permission mode active
+                if (ConfigHandler.inspectBlocksOnly.containsKey(player.getName())) {
+                    blocksOnlyMode = ConfigHandler.inspectBlocksOnly.get(player.getName());
+                }
+            }
+
             boolean found = false;
             int x = block.getX();
             int y = block.getY();
@@ -62,7 +73,10 @@ public class BlockLookup {
 
             String blockName = block.getType().name().toLowerCase(Locale.ROOT);
 
-            String query = "SELECT COUNT(*) as count from " + ConfigHandler.prefix + "block " + WorldUtils.getWidIndex("block") + "WHERE wid = '" + worldId + "' AND x = '" + x + "' AND z = '" + z + "' AND y = '" + y + "' AND action IN(0,1) AND time >= '" + checkTime + "' LIMIT 0, 1";
+            // For block-only mode, only show actions 0 (break) and 1 (place)
+            String actionFilter = blocksOnlyMode ? "AND action IN(0,1)" : "AND action IN(0,1,2,3)";
+            
+            String query = "SELECT COUNT(*) as count from " + ConfigHandler.prefix + "block " + WorldUtils.getWidIndex("block") + "WHERE wid = '" + worldId + "' AND x = '" + x + "' AND z = '" + z + "' AND y = '" + y + "' " + actionFilter + " AND time >= '" + checkTime + "' LIMIT 0, 1";
             ResultSet results = statement.executeQuery(query);
             while (results.next()) {
                 count = results.getInt("count");
@@ -70,7 +84,7 @@ public class BlockLookup {
             results.close();
             int totalPages = (int) Math.ceil(count / (limit + 0.0));
 
-            query = "SELECT time,user,action,type,data,rolled_back FROM " + ConfigHandler.prefix + "block " + WorldUtils.getWidIndex("block") + "WHERE wid = '" + worldId + "' AND x = '" + x + "' AND z = '" + z + "' AND y = '" + y + "' AND action IN(0,1) AND time >= '" + checkTime + "' ORDER BY rowid DESC LIMIT " + page_start + ", " + limit + "";
+            query = "SELECT time,user,action,type,data,rolled_back FROM " + ConfigHandler.prefix + "block " + WorldUtils.getWidIndex("block") + "WHERE wid = '" + worldId + "' AND x = '" + x + "' AND z = '" + z + "' AND y = '" + y + "' " + actionFilter + " AND time >= '" + checkTime + "' ORDER BY rowid DESC LIMIT " + page_start + ", " + limit + "";
             results = statement.executeQuery(query);
 
             StringBuilder resultTextBuilder = new StringBuilder();
@@ -82,6 +96,11 @@ public class BlockLookup {
                 int resultData = results.getInt("data");
                 long resultTime = results.getLong("time");
                 int resultRolledBack = results.getInt("rolled_back");
+
+                // Skip non-block actions in blocks-only mode
+                if (blocksOnlyMode && (resultAction > 1)) {
+                    continue;
+                }
 
                 if (ConfigHandler.playerIdCacheReversed.get(resultUserId) == null) {
                     UserStatement.loadName(statement.getConnection(), resultUserId);

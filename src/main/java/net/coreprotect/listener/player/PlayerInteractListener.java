@@ -77,11 +77,18 @@ public final class PlayerInteractListener extends Queue implements Listener {
             return;
         }
 
-        if (!player.hasPermission("coreprotect.inspect")) {
+        boolean hasFullInspect = player.hasPermission("coreprotect.inspect");
+        boolean hasBlocksInspect = player.hasPermission("coreprotect.inspect.blocks");
+        
+        if (!hasFullInspect && !hasBlocksInspect) {
             Chat.sendMessage(player, Color.DARK_AQUA + "CoreProtect " + Color.WHITE + "- " + Phrase.build(Phrase.NO_PERMISSION));
             ConfigHandler.inspecting.put(player.getName(), false);
             return;
         }
+        
+        // Store whether this is restricted mode in the player's session
+        ConfigHandler.inspectBlocksOnly.putIfAbsent(player.getName(), !hasFullInspect && hasBlocksInspect);
+        boolean blocksOnlyMode = ConfigHandler.inspectBlocksOnly.get(player.getName());
 
         if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
             BlockState checkBlock = event.getClickedBlock().getState();
@@ -138,6 +145,13 @@ public final class PlayerInteractListener extends Queue implements Listener {
                 if (isInteractBlock || isContainerBlock || isSignBlock) {
                     final Block clickedBlock = event.getClickedBlock();
 
+                    // If this is restricted mode, don't allow container interactions or sign inspections
+                    if (blocksOnlyMode && (isContainerBlock || isSignBlock)) {
+                        // Silently ignore - we just don't show these logs in restricted mode
+                        event.setCancelled(true);
+                        return;
+                    }
+
                     if (isSignBlock) {
                         Location location = clickedBlock.getLocation();
                         signInspector.performSignLookup(player, location);
@@ -166,6 +180,13 @@ public final class PlayerInteractListener extends Queue implements Listener {
                         event.setCancelled(true);
                     }
                     else if (isInteractBlock) {
+                        // If this is restricted mode, we don't show interaction logs either
+                        if (blocksOnlyMode) {
+                            // Silently ignore interactions in restricted mode
+                            event.setCancelled(true);
+                            return;
+                        }
+                        
                         // standard player interactions
                         Block interactBlock = clickedBlock;
                         if (BlockGroup.DOORS.contains(type)) {

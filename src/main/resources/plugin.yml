@@ -123,6 +123,9 @@ permissions:
     coreprotect.inspect:
         description: Has permission to use the inspector
         default: op
+    coreprotect.inspect.blocks:
+        description: Has permission to use the inspector with block data only (no container interactions)
+        default: op
     coreprotect.help:
         description: Has permission to use the help command
         default: op
