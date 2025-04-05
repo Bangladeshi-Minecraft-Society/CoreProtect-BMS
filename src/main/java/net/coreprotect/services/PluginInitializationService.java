@@ -17,6 +17,7 @@ import net.coreprotect.language.Language;
 import net.coreprotect.language.Phrase;
 import net.coreprotect.listener.ListenerHandler;
 import net.coreprotect.thread.CacheHandler;
+import net.coreprotect.thread.InspectorStatusTask;
 import net.coreprotect.thread.NetworkHandler;
 import net.coreprotect.thread.Scheduler;
 import net.coreprotect.utility.Chat;
@@ -136,6 +137,9 @@ public class PluginInitializationService {
      *            The CoreProtect plugin instance
      */
     private static void startBackgroundServices(CoreProtect plugin) {
+        // Initialize the inspector status task
+        InspectorStatusTask.initialize(plugin);
+        
         // Start network handler
         Scheduler.scheduleSyncDelayedTask(plugin, () -> {
             try {

@@ -90,6 +90,7 @@ public class Config extends Language {
     public boolean WORLDEDIT;
     public boolean BLOCK_DISPENSE;
     public boolean BLOCK_FERTILIZE;
+    public boolean SHOW_INSPECTOR_STATUS;
     public int MAXIMUM_POOL_SIZE;
     public int MYSQL_PORT;
     public int DEFAULT_RADIUS;
@@ -147,6 +148,7 @@ public class Config extends Language {
         DEFAULT_VALUES.put("worldedit", "true");
         DEFAULT_VALUES.put("block-dispense", "true");
         DEFAULT_VALUES.put("block-fertilize", "true");
+        DEFAULT_VALUES.put("show-inspector-status", "true");
 
         HEADERS.put("donation-key", new String[] { "# CoreProtect is donationware. Obtain a donation key from coreprotect.net/donate/" });
         HEADERS.put("use-mysql", new String[] { "# MySQL is optional and not required.", "# If you prefer to use MySQL, enable the following and fill out the fields." });
@@ -196,6 +198,7 @@ public class Config extends Language {
         HEADERS.put("worldedit", new String[] { "# Logs changes made via the plugin \"WorldEdit\" if it's in use on your server." });
         HEADERS.put("block-dispense", new String[] { "# Logs dispenser/dropper actions. Disabling can improve performance on servers with many dispensers." });
         HEADERS.put("block-fertilize", new String[] { "# Logs bone meal fertilization events. Disabling can improve performance on farming-heavy servers." });
+        HEADERS.put("show-inspector-status", new String[] { "# Displays a persistent action bar message when a player has inspector mode enabled." });
     }
 
     private void readValues() {
@@ -260,6 +263,7 @@ public class Config extends Language {
         this.WORLDEDIT = this.getBoolean("worldedit");
         this.BLOCK_DISPENSE = this.getBoolean("block-dispense");
         this.BLOCK_FERTILIZE = this.getBoolean("block-fertilize");
+        this.SHOW_INSPECTOR_STATUS = this.getBoolean("show-inspector-status", true);
     }
 
     public static void init() throws IOException {

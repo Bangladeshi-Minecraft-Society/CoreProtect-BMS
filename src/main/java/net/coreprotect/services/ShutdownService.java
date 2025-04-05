@@ -14,6 +14,7 @@ import net.coreprotect.consumer.process.Process;
 import net.coreprotect.language.Phrase;
 import net.coreprotect.listener.player.PlayerQuitListener;
 import net.coreprotect.paper.PaperAdapter;
+import net.coreprotect.thread.InspectorStatusTask;
 import net.coreprotect.utility.Chat;
 import net.coreprotect.utility.Teleport;
 
@@ -38,6 +39,9 @@ public class ShutdownService {
      */
     public static void safeShutdown(Plugin plugin) {
         try {
+            // Stop all inspector status tasks
+            InspectorStatusTask.stopAllTasks();
+            
             // Log disconnections of online players if server is stopping
             if (ConfigHandler.serverRunning && PaperAdapter.ADAPTER.isStopping(plugin.getServer())) {
                 for (Player player : plugin.getServer().getOnlinePlayers()) {

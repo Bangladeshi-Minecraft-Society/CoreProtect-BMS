@@ -1,10 +1,12 @@
 package net.coreprotect.command;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import net.coreprotect.config.ConfigHandler;
 import net.coreprotect.language.Phrase;
 import net.coreprotect.language.Selector;
+import net.coreprotect.thread.InspectorStatusTask;
 import net.coreprotect.utility.Chat;
 import net.coreprotect.utility.Color;
 
@@ -38,6 +40,11 @@ public class InspectCommand {
                 else {
                     Chat.sendMessage(player, Color.DARK_AQUA + "CoreProtect " + Color.WHITE + "- " + Phrase.build(Phrase.INSPECTOR_TOGGLED, Selector.FIRST)); // now enabled
                     ConfigHandler.inspecting.put(player.getName(), true);
+                    
+                    // Start the inspector status task for players only
+                    if (player instanceof Player) {
+                        InspectorStatusTask.startTask((Player) player);
+                    }
                 }
             }
             else {
@@ -47,6 +54,11 @@ public class InspectCommand {
                 else {
                     Chat.sendMessage(player, Color.DARK_AQUA + "CoreProtect " + Color.WHITE + "- " + Phrase.build(Phrase.INSPECTOR_TOGGLED, Selector.SECOND)); // now disabled
                     ConfigHandler.inspecting.put(player.getName(), false);
+                    
+                    // Stop the inspector status task for players only
+                    if (player instanceof Player) {
+                        InspectorStatusTask.stopTask((Player) player);
+                    }
                 }
             }
 
