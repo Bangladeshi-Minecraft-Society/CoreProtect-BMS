@@ -488,24 +488,36 @@ public class RollbackProcessor {
         try {
             // Check if this is a container restoration from a break
             String loggingContainerId = userString.toLowerCase(java.util.Locale.ROOT) + "." + x + "." + y + "." + z;
-            List<Map<Integer, ItemStack>> slotMaps = ConfigHandler.oldContainerWithSlots.get(loggingContainerId);
             
+            // DEBUG - Log what we're trying to restore
+            Bukkit.getLogger().info("[CoreProtect Debug] Attempting to restore container at " + x + "," + y + "," + z + 
+                " with id " + loggingContainerId);
+            
+            // Try both formats for maximum compatibility
+            List<Map<Integer, ItemStack>> slotMaps = ConfigHandler.oldContainerWithSlots.get(loggingContainerId);
+            List<ItemStack[]> oldContainer = ConfigHandler.oldContainer.get(loggingContainerId);
+            
+            // Debug stats
+            if (slotMaps != null) {
+                Bukkit.getLogger().info("[CoreProtect Debug] Found " + slotMaps.size() + " slot maps for container restoration");
+            } else {
+                Bukkit.getLogger().info("[CoreProtect Debug] No slot maps found for container restoration");
+            }
+            
+            if (oldContainer != null) {
+                Bukkit.getLogger().info("[CoreProtect Debug] Found " + oldContainer.size() + " old container entries for fallback");
+            }
+            
+            // First try to restore using the more precise slot maps
             if (slotMaps != null && !slotMaps.isEmpty()) {
-                // Debug logging
-                Bukkit.getLogger().info("[CoreProtect] Restoring container at " + x + "," + y + "," + z + " with " + slotMaps.size() + " saved states");
-                
                 // Get the first map of slot data (most recent)
                 Map<Integer, ItemStack> slotMap = slotMaps.get(0);
                 
-                // Create a container state for full restoration
-                ContainerState state = new ContainerState(containerType, 1);
-                
-                // Add all items from the slot map to our state
+                // Debug what we're restoring
                 for (Map.Entry<Integer, ItemStack> entry : slotMap.entrySet()) {
                     ItemStack item = entry.getValue();
-                    if (item != null && item.getType() != Material.AIR) {
-                        state.setItem(entry.getKey(), item);
-                    }
+                    Bukkit.getLogger().info("[CoreProtect Debug] Will restore: Slot " + entry.getKey() + ": " + 
+                        item.getType() + " x" + item.getAmount());
                 }
                 
                 // Apply the state to the container
@@ -515,49 +527,71 @@ public class RollbackProcessor {
                     // First clear the entire inventory to avoid item merging issues
                     inventory.clear();
                     
-                    // Debug logging
-                    Bukkit.getLogger().info("[CoreProtect] Restoring " + slotMap.size() + " items to container");
-                    
-                    // Now set each item in its exact slot
+                    // Now set each item in its exact slot - CRITICAL for position preservation
                     for (Map.Entry<Integer, ItemStack> entry : slotMap.entrySet()) {
                         int itemSlot = entry.getKey();
                         ItemStack item = entry.getValue().clone();
                         
                         // Make sure the slot is valid
                         if (itemSlot >= 0 && itemSlot < inventory.getSize()) {
-                            // Debug the item being restored
-                            String itemInfo = item.getType() + " x" + item.getAmount() + " in slot " + itemSlot;
-                            Bukkit.getLogger().info("[CoreProtect] Restoring item: " + itemInfo);
-                            
-                            // Set the item in the inventory
+                            // Set the item in the inventory at the exact slot position
                             inventory.setItem(itemSlot, item);
+                            
+                            // Debug what we just restored
+                            Bukkit.getLogger().info("[CoreProtect Debug] Restored item: " + item.getType() + 
+                                " x" + item.getAmount() + " to slot " + itemSlot);
                         }
                     }
                     
-                    // Clear the map after using it to prevent it from being used again
+                    // Important: Update the inventory after all items have been set
+                    try {
+                        // Force an update on the inventory to ensure clients see the changes
+                        if (inventory.getHolder() != null && inventory.getHolder() instanceof BlockState) {
+                            ((BlockState) inventory.getHolder()).update(true, false);
+                        }
+                    } catch (Exception e) {
+                        // Ignore any errors from the update
+                    }
+                    
+                    // Only remove the data after a successful restoration
                     slotMaps.remove(0);
                     if (slotMaps.isEmpty()) {
                         ConfigHandler.oldContainerWithSlots.remove(loggingContainerId);
+                        Bukkit.getLogger().info("[CoreProtect Debug] Removed used container state from cache");
                     }
                     
                     return true;
                 }
                 else if (container instanceof ItemFrame) {
-                    // Clear the map after using it to prevent it from being used again
+                    // Handle item frames (code unchanged)
                     slotMaps.remove(0);
                     if (slotMaps.isEmpty()) {
                         ConfigHandler.oldContainerWithSlots.remove(loggingContainerId);
                     }
                     
                     // Use the ContainerManager to handle item frame restoration
+                    ContainerState state = new ContainerState(containerType, 1);
+                    for (Map.Entry<Integer, ItemStack> entry : slotMap.entrySet()) {
+                        state.setItem(entry.getKey(), entry.getValue());
+                    }
                     return ContainerManager.applyContainerState(container, state);
                 }
             }
+            // Fall back to single-item restoration
             else if (slot >= 0 && itemstack != null && itemstack.getType() != Material.AIR) {
                 // This is a single-item restoration
-                ContainerState state = new ContainerState(containerType, 1);
-                state.setItem(slot, itemstack);
-                return ContainerManager.applyContainerState(container, state);
+                Bukkit.getLogger().info("[CoreProtect Debug] Falling back to single-item restoration: " + 
+                    itemstack.getType() + " x" + itemstack.getAmount() + " in slot " + slot);
+                    
+                if (container instanceof Inventory) {
+                    Inventory inventory = (Inventory) container;
+                    inventory.setItem(slot, itemstack.clone());
+                    return true;
+                } else {
+                    ContainerState state = new ContainerState(containerType, 1);
+                    state.setItem(slot, itemstack);
+                    return ContainerManager.applyContainerState(container, state);
+                }
             }
         }
         catch (Exception e) {

@@ -1,6 +1,7 @@
 package net.coreprotect.listener.block;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import net.coreprotect.bukkit.BukkitAdapter;
@@ -365,46 +367,81 @@ public final class BlockBreakListener extends Queue implements Listener {
         if (BlockGroup.CONTAINERS.contains(block.getType())) {
             try {
                 // Debug log the container break
-                Bukkit.getLogger().info("[CoreProtect] Container " + block.getType() + " broken at " + 
+                Bukkit.getLogger().info("[CoreProtect Debug] Container " + block.getType() + " broken at " + 
                     block.getX() + "," + block.getY() + "," + block.getZ() + " by " + user);
                     
-                // Get the container inventory before it's gone
-                Inventory inventory = BlockUtils.getContainerInventory(block.getState(), false);
-                if (inventory != null) {
-                    // Log how many items we found
-                    int itemCount = 0;
-                    for (ItemStack item : inventory.getContents()) {
-                        if (item != null && item.getType() != Material.AIR) {
-                            itemCount++;
-                            // Debug log each item
-                            Bukkit.getLogger().info("[CoreProtect] Container had item: " + 
-                                item.getType() + " x" + item.getAmount());
-                        }
-                    }
-                    Bukkit.getLogger().info("[CoreProtect] Container had " + itemCount + " items total");
+                BlockState blockState = block.getState();
+                if (blockState instanceof InventoryHolder) {
+                    InventoryHolder holder = (InventoryHolder) blockState;
+                    Inventory inventory = holder.getInventory();
                     
-                    // Use our improved container state system to track this
-                    String loggingContainerId = user.toLowerCase(Locale.ROOT) + "." + 
-                        block.getX() + "." + block.getY() + "." + block.getZ();
+                    if (inventory != null) {
+                        // Generate a unique identifier for this container
+                        String loggingContainerId = user.toLowerCase(Locale.ROOT) + "." + 
+                            block.getX() + "." + block.getY() + "." + block.getZ();
                         
-                    // Store a complete snapshot of the inventory without merging anything
-                    Map<Integer, ItemStack> slotMap = new java.util.HashMap<>();
-                    ItemStack[] contents = inventory.getContents();
-                    for (int i = 0; i < contents.length; i++) {
-                        if (contents[i] != null && contents[i].getType() != Material.AIR) {
-                            slotMap.put(i, contents[i].clone());
+                        // Get all items in the inventory
+                        ItemStack[] contents = inventory.getContents();
+                        
+                        // Count non-empty slots for debugging
+                        int nonEmptySlots = 0;
+                        for (ItemStack item : contents) {
+                            if (item != null && item.getType() != Material.AIR) {
+                                nonEmptySlots++;
+                            }
                         }
-                    }
-                    
-                    // Store this exact snapshot for future restoration
-                    if (!slotMap.isEmpty()) {
-                        ConfigHandler.oldContainerWithSlots.computeIfAbsent(loggingContainerId, 
-                            k -> new java.util.ArrayList<>()).add(slotMap);
                         
-                        // Debug what we stored
-                        Bukkit.getLogger().info("[CoreProtect] Stored " + slotMap.size() + 
-                            " items for container restoration");
+                        Bukkit.getLogger().info("[CoreProtect Debug] Container break: Found " + nonEmptySlots + 
+                            " non-empty slots out of " + contents.length + " total slots");
+                        
+                        // Create a complete map of slots to items
+                        Map<Integer, ItemStack> slotMap = new HashMap<>();
+                        for (int i = 0; i < contents.length; i++) {
+                            if (contents[i] != null && contents[i].getType() != Material.AIR) {
+                                // Clone the item to ensure we have an independent copy
+                                ItemStack itemClone = contents[i].clone();
+                                slotMap.put(i, itemClone);
+                                
+                                // Debug logging
+                                Bukkit.getLogger().info("[CoreProtect Debug] Saved container item in slot " + i + ": " + 
+                                    itemClone.getType() + " x" + itemClone.getAmount());
+                            }
+                        }
+                        
+                        // Only proceed if we found items
+                        if (!slotMap.isEmpty()) {
+                            // Store the slot map for future rollbacks
+                            List<Map<Integer, ItemStack>> existingMaps = ConfigHandler.oldContainerWithSlots.get(loggingContainerId);
+                            
+                            if (existingMaps != null) {
+                                // If we already have maps for this container, add this one to the front (most recent)
+                                existingMaps.add(0, slotMap);
+                                Bukkit.getLogger().info("[CoreProtect Debug] Added to existing container state list, now have " + 
+                                    existingMaps.size() + " states");
+                            } else {
+                                // Otherwise create a new list
+                                List<Map<Integer, ItemStack>> newList = new ArrayList<>();
+                                newList.add(slotMap);
+                                ConfigHandler.oldContainerWithSlots.put(loggingContainerId, newList);
+                                Bukkit.getLogger().info("[CoreProtect Debug] Created new container state list");
+                            }
+                            
+                            // Double-check we stored it correctly
+                            List<Map<Integer, ItemStack>> checkMaps = ConfigHandler.oldContainerWithSlots.get(loggingContainerId);
+                            if (checkMaps != null) {
+                                Bukkit.getLogger().info("[CoreProtect Debug] Successfully stored " + checkMaps.size() + 
+                                    " container states with " + checkMaps.get(0).size() + " items in the most recent state");
+                            } else {
+                                Bukkit.getLogger().severe("[CoreProtect Debug] Failed to store container state!");
+                            }
+                        } else {
+                            Bukkit.getLogger().info("[CoreProtect Debug] Container was empty, no state to store");
+                        }
+                    } else {
+                        Bukkit.getLogger().info("[CoreProtect Debug] Could not get inventory for container");
                     }
+                } else {
+                    Bukkit.getLogger().info("[CoreProtect Debug] Block state is not an inventory holder: " + blockState.getClass().getName());
                 }
             } catch (Exception e) {
                 Bukkit.getLogger().severe("[CoreProtect] Error processing container break: " + e.getMessage());

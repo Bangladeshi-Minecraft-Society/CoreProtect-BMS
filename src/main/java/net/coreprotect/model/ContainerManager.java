@@ -248,13 +248,11 @@ public class ContainerManager {
                 Inventory inventory = (Inventory) container;
                 
                 // First clear any slots we're about to modify to avoid item merging issues
-                for (Map.Entry<Integer, ItemStack> entry : state.getSlotContents().entrySet()) {
-                    int slot = entry.getKey();
-                    if (slot >= 0 && slot < inventory.getSize()) {
-                        // Only clear the slot if we have something to put there
-                        inventory.setItem(slot, null);
-                    }
-                }
+                inventory.clear(); // Clear the entire inventory to avoid any item merging issues
+                
+                // Debug loggging
+                Bukkit.getLogger().info("[CoreProtect] Applying container state with " + 
+                    state.getSlotContents().size() + " items");
                 
                 // Now apply each item to its exact slot
                 for (Map.Entry<Integer, ItemStack> entry : state.getSlotContents().entrySet()) {
@@ -268,11 +266,24 @@ public class ContainerManager {
                             item.setAmount(1);
                         }
                         
+                        // Debug the item being placed
+                        String itemInfo = item.getType() + " x" + item.getAmount() + " in slot " + slot;
+                        Bukkit.getLogger().info("[CoreProtect] Setting item: " + itemInfo);
+                        
                         // Set the item in the exact slot
                         if (slot >= 0 && slot < inventory.getSize()) {
                             inventory.setItem(slot, item);
                         }
                     }
+                }
+                
+                // Force an update on the inventory to ensure clients see the changes
+                try {
+                    if (inventory.getHolder() != null && inventory.getHolder() instanceof BlockState) {
+                        ((BlockState) inventory.getHolder()).update(true, false);
+                    }
+                } catch (Exception e) {
+                    // Ignore any errors from the update
                 }
                 
                 return true;
