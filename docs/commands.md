@@ -13,6 +13,7 @@ ___
 | [/co rollback](#co-rollback) | Rollback block data |
 | [/co restore](#co-restore) | Restore block data |
 | [/co purge](#co-purge) | Delete old block data |
+| [/co exemptzone](#co-exemptzone) | Define zones where logging is disabled |
 | [/co reload](#co-reload) | Reload the configuration file |
 | [/co status](#co-status) | View the plugin status |
 | [/co consumer](#co-consumer) | Toggle consumer processing |
@@ -119,7 +120,19 @@ This option is only available when using MySQL, as SQLite purges do this by defa
 *Please note adding the #optimize option will significantly slow down your purge, and is generally unnecessary.*
 
 ___
+### /co exemptzone
+Define and manage zones where CoreProtect logging is disabled. This can be useful for high-activity areas like mob farms, redstone contraptions, or automatic farms, where excessive logging might cause performance issues or database bloat.
 
+| Command | Description |
+| --- | --- |
+| /co exemptzone pos1 | Set the first position of a selection |
+| /co exemptzone pos2 | Set the second position of a selection |
+| /co exemptzone create <name> | Create an exempt zone from the selected positions |
+| /co exemptzone list | List all exempt zones |
+| /co exemptzone delete <name> | Delete an exempt zone |
+
+> *This feature is available when the CoreProtect API is enabled and requires the `coreprotect.exemptzone` permission.*
+___
 ### /co reload
 Reloads the configuration file.
 ___

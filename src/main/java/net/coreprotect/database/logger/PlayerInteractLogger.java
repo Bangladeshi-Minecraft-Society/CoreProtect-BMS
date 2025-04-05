@@ -6,6 +6,7 @@ import java.util.Locale;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
+import org.bukkit.Location;
 
 import net.coreprotect.CoreProtect;
 import net.coreprotect.config.Config;
@@ -29,7 +30,7 @@ public class PlayerInteractLogger {
                 return;
             }
 
-            CoreProtectPreLogEvent event = new CoreProtectPreLogEvent(user);
+            CoreProtectPreLogEvent event = new CoreProtectPreLogEvent(user, new Location(block.getWorld(), block.getX(), block.getY(), block.getZ()));
             if (Config.getGlobal().API_ENABLED && !Bukkit.isPrimaryThread()) {
                 CoreProtect.getInstance().getServer().getPluginManager().callEvent(event);
             }

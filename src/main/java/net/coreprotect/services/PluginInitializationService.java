@@ -140,6 +140,9 @@ public class PluginInitializationService {
         // Initialize the inspector status task
         InspectorStatusTask.initialize(plugin);
         
+        // Initialize the exempt zone manager
+        net.coreprotect.model.ExemptZoneManager.initialize(plugin);
+        
         // Start network handler
         Scheduler.scheduleSyncDelayedTask(plugin, () -> {
             try {

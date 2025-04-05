@@ -56,10 +56,10 @@ public class Language {
         phrases.put(Phrase.DIRT_BLOCK, "Placed a temporary safety block under you.");
         phrases.put(Phrase.DISABLE_SUCCESS, "Success! Disabled {0}");
         phrases.put(Phrase.DONATION_KEY_REQUIRED, "A valid donation key is required for that command.");
-        phrases.put(Phrase.ENABLE_FAILED, "{0} was unable to start.");
-        phrases.put(Phrase.ENABLE_SUCCESS, "{0} has been successfully enabled!");
-        phrases.put(Phrase.ENJOY_COREPROTECT, "Enjoy {0}? Join our Discord!");
-        phrases.put(Phrase.FINISHING_CONVERSION, "Finishing up data conversion. Please wait...");
+        phrases.put(Phrase.ENABLE_FAILED, "Failed to enable {0}.");
+        phrases.put(Phrase.ENABLE_SUCCESS, "Successfully enabled {0}.");
+        phrases.put(Phrase.ENJOY_COREPROTECT, "Enjoy {0}!");
+        phrases.put(Phrase.FINISHING_CONVERSION, "Finishing data conversion. Please wait...");
         phrases.put(Phrase.FINISHING_LOGGING, "Finishing up data logging. Please wait...");
         phrases.put(Phrase.FIRST_VERSION, "Initial DB: {0}");
         phrases.put(Phrase.GLOBAL_LOOKUP, "Don't specify a radius to do a global lookup.");
@@ -238,6 +238,22 @@ public class Language {
         phrases.put(Phrase.VERSION_INCOMPATIBLE, "{0} {1} is not supported.");
         phrases.put(Phrase.VERSION_REQUIRED, "{0} {1} or higher is required.");
         phrases.put(Phrase.WORLD_NOT_FOUND, "World \"{0}\" not found.");
+
+        // Exempt Zone phrases
+        phrases.put(Phrase.EXEMPT_ZONE_API_DISABLED, "CoreProtect API is not enabled.");
+        phrases.put(Phrase.EXEMPT_ZONE_COMMAND_HELP, "Use \"/co exemptzone\" for help.");
+        phrases.put(Phrase.EXEMPT_ZONE_CREATE_HELP, "Usage: /co exemptzone create <name>");
+        phrases.put(Phrase.EXEMPT_ZONE_CREATE_SUCCESS, "Created exempt zone: {0}");
+        phrases.put(Phrase.EXEMPT_ZONE_CREATE_FAILED, "Failed to create exempt zone. Make sure you have set both positions and the name is unique.");
+        phrases.put(Phrase.EXEMPT_ZONE_DELETE_HELP, "Usage: /co exemptzone delete <name>");
+        phrases.put(Phrase.EXEMPT_ZONE_DELETE_SUCCESS, "Deleted exempt zone: {0}");
+        phrases.put(Phrase.EXEMPT_ZONE_DELETE_FAILED, "No exempt zone found with name: {0}");
+        phrases.put(Phrase.EXEMPT_ZONE_HELP_HEADER, "CoreProtect Exempt Zone Commands:");
+        phrases.put(Phrase.EXEMPT_ZONE_LIST_EMPTY, "No exempt zones defined.");
+        phrases.put(Phrase.EXEMPT_ZONE_LIST_HEADER, "Exempt Zones:");
+        phrases.put(Phrase.EXEMPT_ZONE_PLAYERS_ONLY, "This command can only be executed by a player.");
+        phrases.put(Phrase.EXEMPT_ZONE_POS1_SET, "Position 1 set at: {0}, {1}, {2}");
+        phrases.put(Phrase.EXEMPT_ZONE_POS2_SET, "Position 2 set at: {0}, {1}, {2}");
 
         userPhrases.putAll(phrases);
         translatedPhrases.putAll(phrases);

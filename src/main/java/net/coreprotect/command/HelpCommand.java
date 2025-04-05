@@ -79,6 +79,13 @@ public class HelpCommand {
                 else if (helpcommand.equals("teleport")) {
                     Chat.sendMessage(player, Color.DARK_AQUA + "/co teleport <world> <x> <y> <z> " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_TELEPORT));
                 }
+                else if (helpcommand.equals("exemptzone")) {
+                    Chat.sendMessage(player, Color.DARK_AQUA + "/co exemptzone pos1 " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_PARAMETER, Color.WHITE, "Set position 1"));
+                    Chat.sendMessage(player, Color.DARK_AQUA + "/co exemptzone pos2 " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_PARAMETER, Color.WHITE, "Set position 2"));
+                    Chat.sendMessage(player, Color.DARK_AQUA + "/co exemptzone create <name> " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_PARAMETER, Color.WHITE, "Create a new exempt zone"));
+                    Chat.sendMessage(player, Color.DARK_AQUA + "/co exemptzone list " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_PARAMETER, Color.WHITE, "List all exempt zones"));
+                    Chat.sendMessage(player, Color.DARK_AQUA + "/co exemptzone delete <name> " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_PARAMETER, Color.WHITE, "Delete an exempt zone"));
+                }
                 else if (helpcommand.equals("u") || helpcommand.equals("user") || helpcommand.equals("users") || helpcommand.equals("uuser") || helpcommand.equals("uusers")) {
                     Chat.sendMessage(player, Color.DARK_AQUA + "/co lookup u:<users> " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_USER_1));
                     Chat.sendMessage(player, Color.GREY + Color.ITALIC + Phrase.build(Phrase.HELP_USER_2));
@@ -118,6 +125,7 @@ public class HelpCommand {
                 Chat.sendMessage(player, Color.DARK_AQUA + "/co " + Color.GREY + "restore " + Color.DARK_AQUA + "<params> " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_RESTORE_COMMAND));
                 Chat.sendMessage(player, Color.DARK_AQUA + "/co " + Color.GREY + "lookup " + Color.DARK_AQUA + "<params> " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_LOOKUP_COMMAND));
                 Chat.sendMessage(player, Color.DARK_AQUA + "/co " + Color.GREY + "purge " + Color.DARK_AQUA + "<params> " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_PURGE_COMMAND));
+                Chat.sendMessage(player, Color.DARK_AQUA + "/co " + Color.GREY + "exemptzone " + Color.DARK_AQUA + "<params> " + Color.WHITE + "- " + Phrase.build(Phrase.EXEMPT_ZONE_COMMAND_HELP));
                 Chat.sendMessage(player, Color.DARK_AQUA + "/co " + Color.GREY + "reload " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_RELOAD_COMMAND));
                 Chat.sendMessage(player, Color.DARK_AQUA + "/co " + Color.GREY + "status " + Color.WHITE + "- " + Phrase.build(Phrase.HELP_STATUS_COMMAND));
             }

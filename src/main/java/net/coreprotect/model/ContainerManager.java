@@ -201,7 +201,7 @@ public class ContainerManager {
                     metadata = ItemUtils.convertByteData(itemMeta);
                     
                     // Fire pre-log event
-                    CoreProtectPreLogEvent event = new CoreProtectPreLogEvent(user);
+                    CoreProtectPreLogEvent event = new CoreProtectPreLogEvent(user, location);
                     if (Config.getGlobal().API_ENABLED && !Bukkit.isPrimaryThread()) {
                         Bukkit.getPluginManager().callEvent(event);
                     }

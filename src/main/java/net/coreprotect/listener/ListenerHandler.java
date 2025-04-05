@@ -56,6 +56,7 @@ import net.coreprotect.listener.world.PortalCreateListener;
 import net.coreprotect.listener.world.StructureGrowListener;
 import net.coreprotect.paper.listener.BlockPreDispenseListener;
 import net.coreprotect.paper.listener.PaperChatListener;
+import net.coreprotect.listener.ZoneExemptListener;
 
 public final class ListenerHandler {
 
@@ -142,6 +143,9 @@ public final class ListenerHandler {
         pluginManager.registerEvents(new LeavesDecayListener(), plugin);
         pluginManager.registerEvents(new PortalCreateListener(), plugin);
         pluginManager.registerEvents(new StructureGrowListener(), plugin);
+
+        // Custom Listeners
+        pluginManager.registerEvents(new ZoneExemptListener(), plugin);
 
         // Plugin channel events
         pluginManager.registerEvents(new PluginChannelListener(), plugin);
