@@ -66,6 +66,15 @@ public class ContainerLogger extends Queue {
                 return;
             }
 
+            // Store slot information if enabled
+            if (Config.getGlobal().PRESERVE_CONTAINER_SLOTS) {
+                Map<Integer, ItemStack> slotMap = ItemUtils.getContainerStateWithSlots(contents);
+                if (!slotMap.isEmpty()) {
+                    ConfigHandler.oldContainerWithSlots.computeIfAbsent(loggingContainerId, k -> new java.util.ArrayList<>())
+                        .add(slotMap);
+                }
+            }
+
             // Check if this is a dispenser with no actual changes
             if (player.equals("#dispenser") && ItemUtils.compareContainers(oldInventory, newInventory)) {
                 // No changes detected, mark this dispenser in the dispenserNoChange map

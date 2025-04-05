@@ -1,6 +1,8 @@
 package net.coreprotect.database.rollback;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,8 +25,11 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 
+import net.coreprotect.CoreProtect;
 import net.coreprotect.bukkit.BukkitAdapter;
 import net.coreprotect.config.Config;
 import net.coreprotect.config.ConfigHandler;
@@ -35,6 +40,8 @@ import net.coreprotect.utility.ItemUtils;
 import net.coreprotect.utility.MaterialUtils;
 import net.coreprotect.utility.Teleport;
 import net.coreprotect.utility.WorldUtils;
+import net.coreprotect.model.ContainerState;
+import net.coreprotect.model.ContainerManager;
 
 public class RollbackProcessor {
 
@@ -400,6 +407,14 @@ public class RollbackProcessor {
                             int slot = (Integer) populatedStack[0];
                             itemstack = (ItemStack) populatedStack[2];
 
+                            // Check if we should use preserved slot information
+                            if (Config.getGlobal().PRESERVE_CONTAINER_SLOTS && action == 1) {
+                                if (restoreContainerUsingPreservedSlots(finalUserString, containerType, container, slot, itemstack, rowX, rowY, rowZ)) {
+                                    itemCount1 = itemCount1 + rowAmount;
+                                    continue; // Skip the normal processing as we've already handled it
+                                }
+                            }
+
                             RollbackUtil.modifyContainerItems(containerType, container, slot, itemstack, action);
                             itemCount1 = itemCount1 + rowAmount;
                         }
@@ -450,5 +465,106 @@ public class RollbackProcessor {
             ConfigHandler.rollbackHash.put(finalUserString, new int[] { itemCount, blockCount, entityCount, 2, (scannedWorlds + 1) });
             return false;
         }
+    }
+
+    /**
+     * Attempts to restore a container's items using preserved slot information
+     * 
+     * @param userString The username performing the rollback
+     * @param containerType The type of container
+     * @param container The container object
+     * @param slot The original slot (if known from database)
+     * @param itemstack The item to place
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @param z The z coordinate
+     * @return True if restoration was done using preserved slots, false if normal processing should be used
+     */
+    private static boolean restoreContainerUsingPreservedSlots(String userString, Material containerType, Object container, int slot, ItemStack itemstack, int x, int y, int z) {
+        if (!Config.getGlobal().PRESERVE_CONTAINER_SLOTS) {
+            return false;
+        }
+        
+        try {
+            // Check if this is a container restoration from a break
+            String loggingContainerId = userString.toLowerCase(java.util.Locale.ROOT) + "." + x + "." + y + "." + z;
+            List<Map<Integer, ItemStack>> slotMaps = ConfigHandler.oldContainerWithSlots.get(loggingContainerId);
+            
+            if (slotMaps != null && !slotMaps.isEmpty()) {
+                // Debug logging
+                Bukkit.getLogger().info("[CoreProtect] Restoring container at " + x + "," + y + "," + z + " with " + slotMaps.size() + " saved states");
+                
+                // Get the first map of slot data (most recent)
+                Map<Integer, ItemStack> slotMap = slotMaps.get(0);
+                
+                // Create a container state for full restoration
+                ContainerState state = new ContainerState(containerType, 1);
+                
+                // Add all items from the slot map to our state
+                for (Map.Entry<Integer, ItemStack> entry : slotMap.entrySet()) {
+                    ItemStack item = entry.getValue();
+                    if (item != null && item.getType() != Material.AIR) {
+                        state.setItem(entry.getKey(), item);
+                    }
+                }
+                
+                // Apply the state to the container
+                if (container instanceof Inventory) {
+                    Inventory inventory = (Inventory) container;
+                    
+                    // First clear the entire inventory to avoid item merging issues
+                    inventory.clear();
+                    
+                    // Debug logging
+                    Bukkit.getLogger().info("[CoreProtect] Restoring " + slotMap.size() + " items to container");
+                    
+                    // Now set each item in its exact slot
+                    for (Map.Entry<Integer, ItemStack> entry : slotMap.entrySet()) {
+                        int itemSlot = entry.getKey();
+                        ItemStack item = entry.getValue().clone();
+                        
+                        // Make sure the slot is valid
+                        if (itemSlot >= 0 && itemSlot < inventory.getSize()) {
+                            // Debug the item being restored
+                            String itemInfo = item.getType() + " x" + item.getAmount() + " in slot " + itemSlot;
+                            Bukkit.getLogger().info("[CoreProtect] Restoring item: " + itemInfo);
+                            
+                            // Set the item in the inventory
+                            inventory.setItem(itemSlot, item);
+                        }
+                    }
+                    
+                    // Clear the map after using it to prevent it from being used again
+                    slotMaps.remove(0);
+                    if (slotMaps.isEmpty()) {
+                        ConfigHandler.oldContainerWithSlots.remove(loggingContainerId);
+                    }
+                    
+                    return true;
+                }
+                else if (container instanceof ItemFrame) {
+                    // Clear the map after using it to prevent it from being used again
+                    slotMaps.remove(0);
+                    if (slotMaps.isEmpty()) {
+                        ConfigHandler.oldContainerWithSlots.remove(loggingContainerId);
+                    }
+                    
+                    // Use the ContainerManager to handle item frame restoration
+                    return ContainerManager.applyContainerState(container, state);
+                }
+            }
+            else if (slot >= 0 && itemstack != null && itemstack.getType() != Material.AIR) {
+                // This is a single-item restoration
+                ContainerState state = new ContainerState(containerType, 1);
+                state.setItem(slot, itemstack);
+                return ContainerManager.applyContainerState(container, state);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            Bukkit.getLogger().severe("[CoreProtect] Error restoring container: " + e.getMessage());
+        }
+        
+        return false;
     }
 }

@@ -38,65 +38,19 @@ import net.coreprotect.consumer.Queue;
 import net.coreprotect.database.Lookup;
 import net.coreprotect.model.BlockGroup;
 import net.coreprotect.utility.ItemUtils;
+import net.coreprotect.config.Config;
 
 public class RollbackUtil extends Lookup {
 
     protected static int modifyContainerItems(Material type, Object container, int slot, ItemStack itemstack, int action) {
         int modifiedArmor = -1;
         try {
-            ItemStack[] contents = null;
-
-            if (type != null && type.equals(Material.ARMOR_STAND)) {
-                EntityEquipment equipment = (EntityEquipment) container;
-                if (equipment != null) {
-                    if (action == 1) {
-                        itemstack.setAmount(1);
-                    }
-                    else {
-                        itemstack.setType(Material.AIR);
-                        itemstack.setAmount(0);
-                    }
-
-                    if (slot < 4) {
-                        contents = equipment.getArmorContents();
-                        if (slot >= 0) {
-                            contents[slot] = itemstack;
-                        }
-                        equipment.setArmorContents(contents);
-                    }
-                    else {
-                        ArmorStand armorStand = (ArmorStand) equipment.getHolder();
-                        armorStand.setArms(true);
-                        switch (slot) {
-                            case 4:
-                                equipment.setItemInMainHand(itemstack);
-                                break;
-                            case 5:
-                                equipment.setItemInOffHand(itemstack);
-                                break;
-                        }
-                    }
-                }
-            }
-            else if (type != null && type.equals(Material.ITEM_FRAME)) {
-                ItemFrame frame = (ItemFrame) container;
-                if (frame != null) {
-                    if (action == 1) {
-                        itemstack.setAmount(1);
-                    }
-                    else {
-                        itemstack.setType(Material.AIR);
-                        itemstack.setAmount(0);
-                    }
-
-                    frame.setItem(itemstack);
-                }
-            }
-            else if (type != null && type.equals(Material.JUKEBOX)) {
+            if (type == Material.JUKEBOX) {
                 Jukebox jukebox = (Jukebox) container;
                 if (jukebox != null) {
-                    if (action == 1 && itemstack.getType().name().startsWith("MUSIC_DISC")) {
-                        itemstack.setAmount(1);
+                    if (action == 1) {
+                        jukebox.setRecord(itemstack);
+                        jukebox.update();
                     }
                     else {
                         itemstack.setType(Material.AIR);
@@ -111,6 +65,23 @@ public class RollbackUtil extends Lookup {
                 Inventory inventory = (Inventory) container;
                 if (inventory != null) {
                     boolean isPlayerInventory = (inventory instanceof PlayerInventory);
+                    
+                    // Check if we should use slot preservation
+                    if (action == 1 && Config.getGlobal().PRESERVE_CONTAINER_SLOTS && slot >= 0) {
+                        // If a specific slot is provided, use it - this means we have the original slot information
+                        // Create a clone of the item stack to ensure we're not modifying the original
+                        ItemStack clonedItem = itemstack.clone();
+                        
+                        // Make sure the item amount is valid
+                        if (clonedItem.getAmount() <= 0) {
+                            clonedItem.setAmount(1);
+                        }
+                        
+                        // Place the item in its exact slot
+                        inventory.setItem(slot, clonedItem);
+                        return modifiedArmor;
+                    }
+                    
                     if (action == 1) {
                         int count = 0;
                         int amount = itemstack.getAmount();

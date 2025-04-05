@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -137,6 +138,15 @@ public final class PlayerInteractEntityListener extends Queue implements Listene
             List<ItemStack[]> list = new ArrayList<>();
             list.add(ItemUtils.getContainerState(contents));
             ConfigHandler.oldContainer.put(loggingChestId, list);
+            
+            // Store slot information if enabled
+            if (Config.getGlobal().PRESERVE_CONTAINER_SLOTS) {
+                Map<Integer, ItemStack> slotMap = ItemUtils.getContainerStateWithSlots(contents);
+                if (!slotMap.isEmpty()) {
+                    ConfigHandler.oldContainerWithSlots.computeIfAbsent(loggingChestId, k -> new java.util.ArrayList<>())
+                        .add(slotMap);
+                }
+            }
         }
 
         ConfigHandler.transactingChest.computeIfAbsent(transactingChestId, k -> Collections.synchronizedList(new ArrayList<>()));

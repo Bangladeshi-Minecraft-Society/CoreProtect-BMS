@@ -3,7 +3,10 @@ package net.coreprotect.listener.block;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -30,10 +33,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import net.coreprotect.bukkit.BukkitAdapter;
 import net.coreprotect.config.Config;
+import net.coreprotect.config.ConfigHandler;
 import net.coreprotect.consumer.Queue;
 import net.coreprotect.database.Database;
 import net.coreprotect.model.BlockGroup;
@@ -332,12 +337,79 @@ public final class BlockBreakListener extends Queue implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    protected void onBlockBreak(BlockBreakEvent event) {
-        if (!event.isCancelled()) {
-            String user = event.getPlayer().getName();
-            Block block = event.getBlock();
-            processBlockBreak(event.getPlayer(), user, event.getBlock(), Config.getConfig(block.getWorld()).BLOCK_BREAK, BlockUtil.NONE);
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        try {
+            final Block block = event.getBlock();
+            final Player player = event.getPlayer();
+
+            if (!Config.getConfig(block.getWorld()).BLOCK_BREAK) {
+                return;
+            }
+
+            // Add our new container handling right before block break is processed
+            if (BlockGroup.CONTAINERS.contains(block.getType()) && Config.getGlobal().PRESERVE_CONTAINER_SLOTS) {
+                handleContainerBreak(block, player.getName());
+            }
+
+            // Rest of the original method continues unchanged
+            String user = player.getName();
+            processBlockBreak(player, user, event.getBlock(), Config.getConfig(block.getWorld()).BLOCK_BREAK, BlockUtil.NONE);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleContainerBreak(Block block, String user) {
+        if (BlockGroup.CONTAINERS.contains(block.getType())) {
+            try {
+                // Debug log the container break
+                Bukkit.getLogger().info("[CoreProtect] Container " + block.getType() + " broken at " + 
+                    block.getX() + "," + block.getY() + "," + block.getZ() + " by " + user);
+                    
+                // Get the container inventory before it's gone
+                Inventory inventory = BlockUtils.getContainerInventory(block.getState(), false);
+                if (inventory != null) {
+                    // Log how many items we found
+                    int itemCount = 0;
+                    for (ItemStack item : inventory.getContents()) {
+                        if (item != null && item.getType() != Material.AIR) {
+                            itemCount++;
+                            // Debug log each item
+                            Bukkit.getLogger().info("[CoreProtect] Container had item: " + 
+                                item.getType() + " x" + item.getAmount());
+                        }
+                    }
+                    Bukkit.getLogger().info("[CoreProtect] Container had " + itemCount + " items total");
+                    
+                    // Use our improved container state system to track this
+                    String loggingContainerId = user.toLowerCase(Locale.ROOT) + "." + 
+                        block.getX() + "." + block.getY() + "." + block.getZ();
+                        
+                    // Store a complete snapshot of the inventory without merging anything
+                    Map<Integer, ItemStack> slotMap = new java.util.HashMap<>();
+                    ItemStack[] contents = inventory.getContents();
+                    for (int i = 0; i < contents.length; i++) {
+                        if (contents[i] != null && contents[i].getType() != Material.AIR) {
+                            slotMap.put(i, contents[i].clone());
+                        }
+                    }
+                    
+                    // Store this exact snapshot for future restoration
+                    if (!slotMap.isEmpty()) {
+                        ConfigHandler.oldContainerWithSlots.computeIfAbsent(loggingContainerId, 
+                            k -> new java.util.ArrayList<>()).add(slotMap);
+                        
+                        // Debug what we stored
+                        Bukkit.getLogger().info("[CoreProtect] Stored " + slotMap.size() + 
+                            " items for container restoration");
+                    }
+                }
+            } catch (Exception e) {
+                Bukkit.getLogger().severe("[CoreProtect] Error processing container break: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 

@@ -62,6 +62,11 @@ public class ItemUtils {
     }
 
     public static ItemStack[] getContainerState(ItemStack[] array) {
+        if (Config.getGlobal().PRESERVE_CONTAINER_SLOTS) {
+            // Use the slot-preserving version instead
+            return getContainerStateWithSlots(array).values().toArray(new ItemStack[0]);
+        }
+        
         ItemStack[] result = array == null ? null : array.clone();
         if (result == null) {
             return result;
@@ -75,6 +80,28 @@ public class ItemUtils {
             }
             result[count] = clonedItem;
             count++;
+        }
+
+        return result;
+    }
+    
+    /**
+     * Gets the container state with slot information preserved
+     * 
+     * @param array The array of ItemStacks to clone
+     * @return A Map of slot indices to ItemStacks
+     */
+    public static Map<Integer, ItemStack> getContainerStateWithSlots(ItemStack[] array) {
+        Map<Integer, ItemStack> result = new HashMap<>();
+        if (array == null) {
+            return result;
+        }
+
+        for (int i = 0; i < array.length; i++) {
+            ItemStack itemStack = array[i];
+            if (itemStack != null) {
+                result.put(i, itemStack.clone());
+            }
         }
 
         return result;

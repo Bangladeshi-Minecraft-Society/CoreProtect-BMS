@@ -54,6 +54,7 @@ public class Config extends Language {
     public boolean VERBOSE;
     public boolean ROLLBACK_ITEMS;
     public boolean ROLLBACK_ENTITIES;
+    public boolean PRESERVE_CONTAINER_SLOTS;
     public boolean SKIP_GENERIC_DATA;
     public boolean BLOCK_PLACE;
     public boolean BLOCK_BREAK;
@@ -109,6 +110,7 @@ public class Config extends Language {
         DEFAULT_VALUES.put("max-radius", "100");
         DEFAULT_VALUES.put("rollback-items", "true");
         DEFAULT_VALUES.put("rollback-entities", "true");
+        DEFAULT_VALUES.put("preserve-container-slots", "true");
         DEFAULT_VALUES.put("skip-generic-data", "true");
         DEFAULT_VALUES.put("block-place", "true");
         DEFAULT_VALUES.put("block-break", "true");
@@ -152,6 +154,10 @@ public class Config extends Language {
         HEADERS.put("max-radius", new String[] { "# The maximum radius that can be used in a command. Set to \"0\" to disable.", "# To run a rollback or restore without a radius, you can use \"r:#global\"." });
         HEADERS.put("rollback-items", new String[] { "# If enabled, items taken from containers (etc) will be included in rollbacks." });
         HEADERS.put("rollback-entities", new String[] { "# If enabled, entities, such as killed animals, will be included in rollbacks." });
+        HEADERS.put("preserve-container-slots", new String[] { 
+            "# If enabled, containers (chests, etc.) will preserve the exact slot positions and quantities of items",
+            "# when they are rolled back. This ensures that chest organization is maintained after rollbacks."
+        });
         HEADERS.put("skip-generic-data", new String[] { "# If enabled, generic data, like zombies burning in daylight, won't be logged." });
         HEADERS.put("block-place", new String[] { "# Logs blocks placed by players." });
         HEADERS.put("block-break", new String[] { "# Logs blocks broken by players." });
@@ -213,6 +219,7 @@ public class Config extends Language {
         this.MAX_RADIUS = this.getInt("max-radius");
         this.ROLLBACK_ITEMS = this.getBoolean("rollback-items");
         this.ROLLBACK_ENTITIES = this.getBoolean("rollback-entities");
+        this.PRESERVE_CONTAINER_SLOTS = this.getBoolean("preserve-container-slots");
         this.SKIP_GENERIC_DATA = this.getBoolean("skip-generic-data");
         this.BLOCK_PLACE = this.getBoolean("block-place");
         this.BLOCK_BREAK = this.getBoolean("block-break");
